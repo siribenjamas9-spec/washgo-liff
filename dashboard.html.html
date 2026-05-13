@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Wash & Go Dashboard</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:  #0A1628; --blue:  #1A4F8A; --sky:   #2E86DE;
+  --teal:  #00BFA5; --gold:  #FFB300; --green: #00C853;
+  --red:   #FF1744; --orange:#FF6D00; --white: #FFFFFF;
+  --gray:  #78909C; --card:  rgba(255,255,255,0.06);
+  --bdr:   rgba(255,255,255,0.10); --r: 16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden}
+
+body {
+  font-family:'Noto Sans Thai',system-ui,sans-serif;
+  background:var(--navy);
+  color:var(--white);
+  min-height:100vh;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+
+/* ── Loading ── */
+#loading {
+  position:fixed;inset:0;background:var(--navy);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;z-index:999;transition:opacity 0.4s;
+}
+#loading.out{opacity:0;pointer-events:none}
+.spin{
+  width:48px;height:48px;border-radius:50%;
+  border:3px solid rgba(255,255,255,0.1);
+  border-top-color:var(--teal);
+  animation:spin 0.7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── App shell ── */
+#app{display:none;min-height:100vh}
+#app.show{display:block}
+
+/* ── Header ── */
+.header{
+  padding:16px 20px 12px;
+  background:rgba(10,22,40,0.95);
+  backdrop-filter:blur(20px);
+  position:sticky;top:0;z-index:50;
+  border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.header-left{display:flex;align-items:center;gap:10px}
+.logo-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  box-shadow:0 3px 12px rgba(255,179,0,0.4);
+}
+.header-title{font-size:16px;font-weight:700}
+.header-sub{font-size:11px;color:var(--gray);margin-top:1px}
+.mode-badge{
+  padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;
+  letter-spacing:0.5px;
+}
+.mode-admin{background:rgba(255,183,0,0.15);border:1px solid rgba(255,183,0,0.4);color:var(--gold)}
+.mode-member{background:rgba(0,191,165,0.15);border:1px solid rgba(0,191,165,0.4);color:var(--teal)}
+
+/* ── Body ── */
+.body{padding:16px;max-width:480px;margin:0 auto}
+
+/* ── Section title ── */
+.section{font-size:11px;font-weight:700;color:var(--gray);
+  text-transform:uppercase;letter-spacing:1.5px;margin:20px 0 10px}
+
+/* ── KPI Grid ── */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi-card{
+  background:var(--card);border:1px solid var(--bdr);
+  border-radius:var(--r);padding:14px;position:relative;overflow:hidden;
+}
+.kpi-card::before{
+  content:'';position:absolute;inset:0;opacity:0.06;
+  background:var(--accent,var(--sky));border-radius:var(--r);
+}
+.kpi-label{font-size:10px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:32px;line-height:1;color:var(--accent,var(--sky))}
+.kpi-sub{font-size:10px;margin-top:4px}
+.up{color:var(--green)} .down{color:var(--red)} .neutral{color:var(--gray)}
+
+/* ── Stamp card ── */
+.stamp-card{
+  background:linear-gradient(135deg,#0D2137,#1A4F8A);
+  border:1px solid rgba(46,134,222,0.4);
+  border-radius:var(--r);padding:20px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);position:relative;overflow:hidden;
+}
+.stamp-card::after{
+  content:'🧺';position:absolute;right:-10px;bottom:-10px;
+  font-size:80px;opacity:0.08;transform:rotate(-15deg);
+}
+.stamp-name{font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:4px}
+.stamp-count{font-size:13px;color:var(--white);margin-bottom:14px}
+.stamp-count span{font-family:'Bebas Neue';font-size:28px;color:var(--gold)}
+.stars-row{display:flex;gap:6px;margin-bottom:14px}
+.star{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;transition:all 0.3s;
+}
+.star.filled{background:rgba(255,179,0,0.25);border:1px solid var(--gold);
+  box-shadow:0 0 8px rgba(255,179,0,0.3);animation:pop 0.4s ease}
+.star.empty{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1)}
+@keyframes pop{0%{transform:scale(0.5)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+.stamp-progress{height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden}
+.stamp-fill{height:100%;border-radius:3px;
+  background:linear-gradient(90deg,var(--gold),var(--orange));
+  transition:width 1s cubic-bezier(0.34,1.56,0.64,1)}
+.stamp-hint{font-size:11px;color:rgba(255,255,255,0.5);margin-top:8px;text-align:center}
+
+/* ── Coupon list ── */
+.coupon{
+  background:var(--card);border:1px solid var(--bdr);
+  border-radius:12px;padding:14px;margin-bottom:8px;
+  display:flex;align-items:center;gap:14px;
+}
+.coupon-icon{font-size:28px;flex-shrink:0}
+.coupon-code{font-size:15px;font-weight:700;color:var(--gold);letter-spacing:1px}
+.coupon-detail{font-size:12px;color:var(--gray);margin-top:2px}
+.coupon-badge{
+  margin-left:auto;padding:4px 10px;border-radius:20px;
+  font-size:11px;font-weight:700;
+  background:rgba(0,200,83,0.15);border:1px solid rgba(0,200,83,0.4);color:var(--green);
+}
+
+/* ── Transaction list ── */
+.tx-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0;border-bottom:1px solid var(--bdr);
+}
+.tx-row:last-child{border:none}
+.tx-left .tx-bank{font-size:13px;font-weight:600;color:var(--white)}
+.tx-left .tx-date{font-size:11px;color:var(--gray);margin-top:2px}
+.tx-amt{font-size:16px;font-weight:700;color:var(--teal)}
+
+/* ── Admin anomaly alert ── */
+.alert-box{
+  background:rgba(255,23,68,0.1);border:1px solid rgba(255,23,68,0.4);
+  border-radius:12px;padding:14px;display:flex;gap:12px;align-items:flex-start;
+}
+.alert-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+.alert-text{font-size:13px;line-height:1.6}
+.alert-none{
+  background:rgba(0,200,83,0.08);border:1px solid rgba(0,200,83,0.3);
+  border-radius:12px;padding:12px;text-align:center;font-size:13px;color:var(--green);
+}
+
+/* ── Divider ── */
+.divider{height:1px;background:var(--bdr);margin:20px 0}
+
+/* ── Refresh btn ── */
+.refresh-btn{
+  width:100%;padding:14px;border-radius:var(--r);border:none;
+  background:linear-gradient(135deg,var(--blue),var(--sky));
+  color:var(--white);font-family:inherit;font-size:14px;font-weight:700;
+  cursor:pointer;margin-top:16px;letter-spacing:0.3px;
+  box-shadow:0 4px 16px rgba(46,134,222,0.3);
+  transition:all 0.2s;
+}
+.refresh-btn:active{transform:scale(0.97);box-shadow:none}
+
+/* ── Error ── */
+.error-state{
+  text-align:center;padding:40px 20px;
+}
+.error-icon{font-size:48px;margin-bottom:12px}
+.error-title{font-size:16px;font-weight:700;margin-bottom:6px}
+.error-sub{font-size:13px;color:var(--gray);line-height:1.6}
+
+/* ── Fade in ── */
+.fade-in{animation:fadeIn 0.4s ease forwards}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="spin"></div>
+  <div style="font-size:14px;color:rgba(255,255,255,0.6)">กำลังโหลด...</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-icon">🧺</div>
+      <div>
+        <div class="header-title">Wash &amp; Go</div>
+        <div class="header-sub" id="headerSub">สาขาหัวทะเล</div>
+      </div>
+    </div>
+    <div class="mode-badge" id="modeBadge">โหลด...</div>
+  </div>
+
+  <div class="body fade-in" id="mainContent"></div>
+
+</div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────────
+const LIFF_ID  = 'YOUR_LIFF_ID_DASHBOARD';
+const GAS_URL  = 'YOUR_GAS_WEB_APP_URL';
+const ADMIN_UIDS = ['YOUR_ADMIN_LINE_USER_ID']; // เพิ่ม LINE UID ผู้บริหาร
+
+// ── Main ───────────────────────────────────────────────────
+async function main() {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (!liff.isLoggedIn()) { liff.login(); return; }
+
+    const profile = await liff.getProfile();
+    const isAdmin = ADMIN_UIDS.includes(profile.userId);
+
+    document.getElementById('modeBadge').textContent = isAdmin ? '👑 Admin' : '⭐ สมาชิก';
+    document.getElementById('modeBadge').className   = 'mode-badge ' + (isAdmin ? 'mode-admin' : 'mode-member');
+
+    if (isAdmin) {
+      await renderAdmin(profile);
+    } else {
+      await renderMember(profile);
+    }
+  } catch(e) {
+    // DEV fallback
+    await renderMember({ userId:'DEV001', displayName:'Dev User' });
+  }
+
+  document.getElementById('loading').classList.add('out');
+  setTimeout(() => {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').classList.add('show');
+  }, 400);
+}
+
+// ── ADMIN VIEW ─────────────────────────────────────────────
+async function renderAdmin(profile) {
+  document.getElementById('headerSub').textContent = 'Executive Dashboard';
+
+  let data = {};
+  try {
+    const res = await fetch(`${GAS_URL}?action=dashboard_admin`);
+    data = await res.json();
+  } catch(e) {
+    // Mock data สำหรับ dev
+    data = { revenue:4200, txCount:23, avgTicket:183, anomaly:0,
+              totalMembers:66, newToday:3, date:'2026-05-10' };
+  }
+
+  const pos = (v) => `<span class="up">▲ ${v}</span>`;
+
+  document.getElementById('mainContent').innerHTML = `
+    <p class="section">วันนี้ ${data.date || ''}</p>
+    <div class="kpi-grid">
+      <div class="kpi-card" style="--accent:var(--teal)">
+        <div class="kpi-label">รายได้</div>
+        <div class="kpi-val">฿${(data.revenue||0).toLocaleString()}</div>
+        <div class="kpi-sub up">▲ 12% vs เมื่อวาน</div>
+      </div>
+      <div class="kpi-card" style="--accent:var(--sky)">
+        <div class="kpi-label">Transactions</div>
+        <div class="kpi-val">${data.txCount||0}</div>
+        <div class="kpi-sub up">▲ 3 vs เมื่อวาน</div>
+      </div>
+      <div class="kpi-card" style="--accent:var(--gold)">
+        <div class="kpi-label">Avg Ticket</div>
+        <div class="kpi-val">฿${data.avgTicket||0}</div>
+        <div class="kpi-sub neutral">เป้า ฿180</div>
+      </div>
+      <div class="kpi-card" style="--accent:${data.anomaly>0?'var(--red)':'var(--green)'}">
+        <div class="kpi-label">🚨 Anomaly</div>
+        <div class="kpi-val">${data.anomaly||0}</div>
+        <div class="kpi-sub ${data.anomaly>0?'down':'up'}">${data.anomaly>0?'⚠️ ต้องตรวจสอบ':'✅ ปกติ'}</div>
+      </div>
+    </div>
+
+    <p class="section">สมาชิก</p>
+    <div class="kpi-grid">
+      <div class="kpi-card" style="--accent:var(--teal)">
+        <div class="kpi-label">สมาชิกทั้งหมด</div>
+        <div class="kpi-val">${data.totalMembers||0}</div>
+        <div class="kpi-sub neutral">คน</div>
+      </div>
+      <div class="kpi-card" style="--accent:var(--green)">
+        <div class="kpi-label">สมัครวันนี้</div>
+        <div class="kpi-val">${data.newToday||0}</div>
+        <div class="kpi-sub neutral">คนใหม่</div>
+      </div>
+    </div>
+
+    <p class="section">Anomaly Status</p>
+    ${data.anomaly > 0
+      ? `<div class="alert-box">
+          <div class="alert-icon">🚨</div>
+          <div class="alert-text">
+            พบ <strong>${data.anomaly} รายการ</strong>ที่ต้องตรวจสอบ<br>
+            กรุณาเปิด Google Sheets → Anomaly_Log
+          </div>
+         </div>`
+      : `<div class="alert-none">✅ ไม่พบความผิดปกติวันนี้</div>`
+    }
+
+    <p class="section">Quick Links</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      ${[
+        {icon:'📊',label:'Looker Studio',url:'https://lookerstudio.google.com'},
+        {icon:'📋',label:'Google Sheets',url:'https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID'},
+        {icon:'👥',label:'LINE OA Manager',url:'https://manager.line.biz'},
+        {icon:'🔧',label:'Apps Script',url:'https://script.google.com'},
+      ].map(l=>`
+        <a href="${l.url}" target="_blank" style="
+          display:flex;align-items:center;gap:10px;padding:12px;
+          background:var(--card);border:1px solid var(--bdr);
+          border-radius:12px;text-decoration:none;color:var(--white);
+        ">
+          <span style="font-size:20px">${l.icon}</span>
+          <span style="font-size:12px;font-weight:600">${l.label}</span>
+        </a>
+      `).join('')}
+    </div>
+
+    <button class="refresh-btn" onclick="location.reload()">🔄 รีเฟรชข้อมูล</button>
+  `;
+}
+
+// ── MEMBER VIEW ────────────────────────────────────────────
+async function renderMember(profile) {
+  document.getElementById('headerSub').textContent = 'สมาชิก Wash & Go';
+
+  let data = {};
+  try {
+    const res = await fetch(`${GAS_URL}?action=member_data&uid=${profile.userId}`);
+    data = await res.json();
+  } catch(e) {
+    data = {
+      name: profile.displayName || 'สมาชิก',
+      stamps: 3, stampThreshold: 5, stampReward: 50,
+      coupons: [{ code:'WG-A1B2C3', amount:50, expiry:'31/05/2569' }],
+      recentTx: [
+        {date:'2026-05-10',amount:100},{date:'2026-05-08',amount:150},
+        {date:'2026-05-03',amount:100},
+      ],
+      totalSpend: 1200, stage: 'REPEAT_BUYER',
+    };
+  }
+
+  if (data.error === 'NOT_MEMBER') {
+    document.getElementById('mainContent').innerHTML = `
+      <div class="error-state">
+        <div class="error-icon">🧺</div>
+        <div class="error-title">ยังไม่ได้สมัครสมาชิก</div>
+        <div class="error-sub">สมัครฟรี รับสิทธิ์สะสมแต้มทันที</div>
+        <button class="refresh-btn" style="max-width:220px;margin:20px auto 0"
+          onclick="liff.openWindow({url:'https://liff.line.me/LIFF_ID_REGISTER',external:false})">
+          📋 สมัครสมาชิก
+        </button>
+      </div>`;
+    return;
+  }
+
+  const stamps = data.stamps || 0;
+  const threshold = data.stampThreshold || 5;
+  const starsHTML = Array.from({length:threshold}, (_,i) =>
+    `<div class="star ${i<stamps?'filled':'empty'}" style="animation-delay:${i*0.08}s">
+      ${i<stamps?'⭐':'☆'}
+    </div>`
+  ).join('');
+
+  const pct = Math.min(100, Math.round(stamps / threshold * 100));
+
+  document.getElementById('mainContent').innerHTML = `
+    <!-- Stamp Card -->
+    <p class="section">Stamp Card</p>
+    <div class="stamp-card">
+      <div class="stamp-name">สวัสดี, ${data.name} 👋</div>
+      <div class="stamp-count">
+        แต้มสะสม <span>${stamps}</span> / ${threshold}
+        ${stamps >= threshold ? '🎉 ครบแล้ว!' : `อีก ${threshold-stamps} ครั้งรับส่วนลด ฿${data.stampReward}`}
+      </div>
+      <div class="stars-row">${starsHTML}</div>
+      <div class="stamp-progress">
+        <div class="stamp-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="stamp-hint">ส่งสลิปโอนเงินทุกครั้งที่ใช้บริการเพื่อสะสมแต้ม</div>
+    </div>
+
+    <!-- Coupons -->
+    <p class="section">คูปองของฉัน</p>
+    ${(data.coupons||[]).length === 0
+      ? `<div style="text-align:center;padding:20px;color:var(--gray);font-size:13px">
+          ยังไม่มีคูปอง — สะสมครบ ${threshold} ครั้งเพื่อรับส่วนลด ฿${data.stampReward}
+         </div>`
+      : (data.coupons||[]).map(c=>`
+          <div class="coupon">
+            <div class="coupon-icon">🎟️</div>
+            <div>
+              <div class="coupon-code">${c.code}</div>
+              <div class="coupon-detail">ลด ฿${c.amount} · หมดอายุ ${c.expiry}</div>
+            </div>
+            <div class="coupon-badge">ใช้ได้</div>
+          </div>
+        `).join('')
+    }
+
+    <!-- Recent Transactions -->
+    <p class="section">ประวัติล่าสุด</p>
+    <div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:4px 16px">
+      ${(data.recentTx||[]).length === 0
+        ? `<div class="tx-row"><span style="color:var(--gray);font-size:13px">ยังไม่มีประวัติ</span></div>`
+        : (data.recentTx||[]).map(tx=>`
+            <div class="tx-row">
+              <div class="tx-left">
+                <div class="tx-bank">🧺 ใช้บริการ</div>
+                <div class="tx-date">${tx.date}</div>
+              </div>
+              <div class="tx-amt">+฿${tx.amount}</div>
+            </div>
+          `).join('')
+      }
+    </div>
+
+    <!-- Stats -->
+    <p class="section">สถิติของฉัน</p>
+    <div class="kpi-grid">
+      <div class="kpi-card" style="--accent:var(--gold)">
+        <div class="kpi-label">ยอดใช้รวม</div>
+        <div class="kpi-val">฿${(data.totalSpend||0).toLocaleString()}</div>
+        <div class="kpi-sub neutral">ตลอดการเป็นสมาชิก</div>
+      </div>
+      <div class="kpi-card" style="--accent:var(--teal)">
+        <div class="kpi-label">สถานะ</div>
+        <div class="kpi-val" style="font-size:14px;margin-top:4px">${
+          data.stage==='COUPON_REDEEMED'?'👑 VIP':
+          data.stage==='STAMP_COMPLETE'?'🎉 ครบแต้ม':
+          data.stage==='REPEAT_BUYER'?'⭐ ลูกค้าประจำ':
+          data.stage==='FIRST_SLIP'?'🆕 เริ่มใช้':'📋 สมาชิก'
+        }</div>
+        <div class="kpi-sub neutral">Funnel Stage</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div style="text-align:center;font-size:12px;color:var(--gray);padding-bottom:8px">
+      Wash &amp; Go สาขาหัวทะเล · เปิด 24 ชั่วโมง 🧺
+    </div>
+  `;
+
+  // Animate stamp fill after render
+  setTimeout(() => {
+    const fill = document.querySelector('.stamp-fill');
+    if(fill) fill.style.width = pct + '%';
+  }, 200);
+}
+
+main();
+</script>
+</body>
+</html>
