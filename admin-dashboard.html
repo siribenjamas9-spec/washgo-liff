@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wash & Go — Executive Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Bebas+Neue&family=Sarabun:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#070E1A;--card:#0D1829;--card2:#111F35;
+  --blue:#1A5DA8;--sky:#2E8DE8;--teal:#00C9B1;
+  --gold:#FFB300;--green:#00E676;--red:#FF1744;
+  --orange:#FF6D00;--purple:#7C3AED;
+  --text:#E8F0FE;--muted:#5C7A9E;--border:rgba(46,141,232,0.15);
+  --r:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Sarabun',sans-serif;
+  background:var(--navy);color:var(--text);
+  min-height:100vh;
+  background-image:
+    radial-gradient(ellipse at 20% 0%,rgba(26,93,168,0.15) 0%,transparent 60%),
+    radial-gradient(ellipse at 80% 100%,rgba(0,201,177,0.08) 0%,transparent 60%);
+}
+
+/* ── HEADER ── */
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 32px;
+  border-bottom:1px solid var(--border);
+  background:rgba(7,14,26,0.8);
+  backdrop-filter:blur(20px);
+  position:sticky;top:0;z-index:100;
+}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;box-shadow:0 0 20px rgba(255,179,0,0.3);
+}
+.logo-text h1{font-family:'Bebas Neue';font-size:22px;letter-spacing:2px;color:var(--text)}
+.logo-text p{font-size:11px;color:var(--muted);letter-spacing:1px;margin-top:1px}
+.header-right{display:flex;align-items:center;gap:16px}
+.live-dot{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--green);font-weight:500;
+}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.3)}}
+.date-badge{
+  font-size:12px;color:var(--muted);
+  background:var(--card);border:1px solid var(--border);
+  padding:6px 14px;border-radius:20px;
+}
+
+/* ── BODY ── */
+.body{padding:28px 32px;max-width:1400px;margin:0 auto}
+.section-title{
+  font-family:'Kanit',sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--sky);margin-bottom:16px;
+  display:flex;align-items:center;gap:10px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.kpi-grid{grid-template-columns:1fr}}
+
+.kpi{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:20px;position:relative;overflow:hidden;
+  transition:transform 0.2s,border-color 0.2s;cursor:default;
+}
+.kpi:hover{transform:translateY(-2px);border-color:rgba(46,141,232,0.35)}
+.kpi::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--accent);border-radius:2px 2px 0 0;
+}
+.kpi-icon{font-size:20px;margin-bottom:10px;opacity:0.9}
+.kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.kpi-val{font-family:'Bebas Neue';font-size:38px;line-height:1;color:var(--text);letter-spacing:1px}
+.kpi-val span{font-size:18px;opacity:0.6;margin-right:2px}
+.kpi-sub{font-size:11px;margin-top:6px;display:flex;align-items:center;gap:4px}
+.up{color:var(--green)}.down{color:var(--red)}.neutral{color:var(--muted)}
+.kpi-glow{
+  position:absolute;bottom:-20px;right:-20px;
+  width:80px;height:80px;border-radius:50%;
+  background:var(--accent);opacity:0.06;filter:blur(20px);
+}
+
+/* ── CHARTS GRID ── */
+.charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:28px}
+@media(max-width:900px){.charts-grid{grid-template-columns:1fr}}
+
+.chart-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:22px;
+}
+.chart-title{font-family:'Kanit',sans-serif;font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.chart-sub{font-size:11px;color:var(--muted);margin-bottom:18px}
+.chart-wrap{position:relative;height:220px}
+
+/* ── BOTTOM GRID ── */
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:28px}
+@media(max-width:900px){.bottom-grid{grid-template-columns:1fr}}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+td{font-size:13px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04)}
+tr:last-child td{border:none}
+tr:hover td{background:rgba(46,141,232,0.04)}
+
+/* ── FUNNEL ── */
+.funnel-item{margin-bottom:10px}
+.funnel-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.funnel-label span:first-child{color:var(--text)}
+.funnel-label span:last-child{color:var(--muted)}
+.funnel-bar{height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden}
+.funnel-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--sky),var(--teal));transition:width 1.2s cubic-bezier(0.34,1.56,0.64,1)}
+
+/* ── VIP RING ── */
+.vip-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%}
+.ring-chart{position:relative;width:140px;height:140px;margin:0 auto 16px}
+.ring-chart svg{transform:rotate(-90deg)}
+.ring-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.ring-val{font-family:'Bebas Neue';font-size:32px;color:var(--gold)}
+.ring-lbl{font-size:10px;color:var(--muted)}
+.vip-stats{display:flex;gap:24px;margin-top:8px}
+.vip-stat{text-align:center}
+.vip-stat-val{font-family:'Bebas Neue';font-size:22px}
+.vip-stat-lbl{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* ── BADGE ── */
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(0,230,118,0.12);color:var(--green)}
+.badge-red{background:rgba(255,23,68,0.12);color:var(--red)}
+.badge-gold{background:rgba(255,179,0,0.12);color:var(--gold)}
+.badge-blue{background:rgba(46,141,232,0.12);color:var(--sky)}
+
+/* ── SKELETON ── */
+.skeleton{background:linear-gradient(90deg,var(--card) 25%,var(--card2) 50%,var(--card) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── LOADING ── */
+#loadingScreen{
+  position:fixed;inset:0;background:var(--navy);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  z-index:999;transition:opacity 0.5s;
+}
+#loadingScreen.out{opacity:0;pointer-events:none}
+.spin{width:48px;height:48px;border-radius:50%;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--teal);animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-text{font-family:'Kanit',sans-serif;font-size:14px;color:var(--muted)}
+
+/* ── REFRESH BTN ── */
+.refresh-btn{
+  background:var(--card);border:1px solid var(--border);color:var(--muted);
+  padding:8px 18px;border-radius:20px;font-size:12px;cursor:pointer;
+  font-family:'Sarabun',sans-serif;transition:all 0.2s;
+}
+.refresh-btn:hover{border-color:var(--sky);color:var(--sky)}
+</style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div class="logo-icon" style="width:56px;height:56px;font-size:28px">🧺</div>
+  <div class="spin"></div>
+  <div class="load-text">กำลังโหลดข้อมูล...</div>
+</div>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">🧺</div>
+    <div class="logo-text">
+      <h1>WASH & GO</h1>
+      <p>EXECUTIVE DASHBOARD · @667otwdx · หัวทะเล โคราช</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-dot"><div class="dot"></div>LIVE</div>
+    <div class="date-badge" id="dateLabel">—</div>
+    <button class="refresh-btn" onclick="loadAll()">⟳ รีเฟรช</button>
+  </div>
+</div>
+
+<div class="body">
+
+  <!-- KPI -->
+  <div class="section-title">📊 ภาพรวมวันนี้</div>
+  <div class="kpi-grid">
+    <div class="kpi" style="--accent:var(--teal)">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">รายได้วันนี้</div>
+      <div class="kpi-val" id="kRevenue"><span>฿</span>—</div>
+      <div class="kpi-sub neutral" id="kRevSub">กำลังโหลด...</div>
+      <div class="kpi-glow" style="--accent:var(--teal)"></div>
+    </div>
+    <div class="kpi" style="--accent:var(--sky)">
+      <div class="kpi-icon">🧺</div>
+      <div class="kpi-label">Transactions</div>
+      <div class="kpi-val" id="kTxn">—</div>
+      <div class="kpi-sub neutral" id="kAvgSub">Avg ฿—</div>
+      <div class="kpi-glow" style="--accent:var(--sky)"></div>
+    </div>
+    <div class="kpi" style="--accent:var(--gold)">
+      <div class="kpi-icon">👥</div>
+      <div class="kpi-label">สมาชิกทั้งหมด</div>
+      <div class="kpi-val" id="kMembers">—</div>
+      <div class="kpi-sub neutral" id="kGoldSub">🥇 Gold VIP —</div>
+      <div class="kpi-glow" style="--accent:var(--gold)"></div>
+    </div>
+    <div class="kpi" style="--accent:var(--red)">
+      <div class="kpi-icon">🚨</div>
+      <div class="kpi-label">Anomaly วันนี้</div>
+      <div class="kpi-val" id="kAnomaly">—</div>
+      <div class="kpi-sub" id="kAnomalySub" class="neutral">ตรวจสอบ</div>
+      <div class="kpi-glow" style="--accent:var(--red)"></div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">รายได้รายวัน 14 วันล่าสุด</div>
+      <div class="chart-sub">Revenue Trend</div>
+      <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">สัดส่วน Tier</div>
+      <div class="chart-sub">Bronze vs Gold VIP</div>
+      <div class="chart-wrap"><canvas id="tierChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="bottom-grid">
+
+    <!-- Funnel -->
+    <div class="chart-card">
+      <div class="chart-title">Customer Funnel</div>
+      <div class="chart-sub">การเดินทางของลูกค้า</div>
+      <div id="funnelWrap" style="margin-top:8px">
+        <div class="funnel-item" id="funnelLoading"><div class="skeleton" style="height:40px"></div></div>
+      </div>
+    </div>
+
+    <!-- VIP -->
+    <div class="chart-card" style="display:flex;flex-direction:column">
+      <div class="chart-title">VIP Overview</div>
+      <div class="chart-sub">Bronze & Gold Members</div>
+      <div class="vip-wrap" id="vipWrap">
+        <div class="ring-chart">
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r="54" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="14"/>
+            <circle cx="70" cy="70" r="54" fill="none" stroke="var(--gold)" stroke-width="14"
+              stroke-dasharray="339.3" id="vipRing" stroke-dashoffset="339.3"
+              stroke-linecap="round" style="transition:stroke-dashoffset 1.5s ease"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-val" id="vipPct">—%</div>
+            <div class="ring-lbl">Gold VIP</div>
+          </div>
+        </div>
+        <div class="vip-stats">
+          <div class="vip-stat">
+            <div class="vip-stat-val" style="color:var(--gold)" id="goldCount">—</div>
+            <div class="vip-stat-lbl">🥇 Gold</div>
+          </div>
+          <div class="vip-stat">
+            <div class="vip-stat-val" style="color:var(--sky)" id="bronzeCount">—</div>
+            <div class="vip-stat-lbl">🥉 Bronze</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stamp Stats -->
+    <div class="chart-card">
+      <div class="chart-title">Stamp Progress</div>
+      <div class="chart-sub">ระบบสะสมแต้ม</div>
+      <div style="margin-top:16px" id="stampStats">
+        <div class="skeleton" style="height:120px"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TRANSACTIONS TABLE -->
+  <div class="section-title">📋 Transactions ล่าสุด</div>
+  <div class="chart-card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>เวลา</th><th>สมาชิก</th><th>ยอด</th>
+            <th>ธนาคาร</th><th>สถานะ</th><th>แต้ม</th>
+          </tr>
+        </thead>
+        <tbody id="txTable">
+          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">กำลังโหลด...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:24px;font-size:11px;color:var(--muted)">
+    Wash & Go @667otwdx · สาขาหัวทะเล โคราช · Dashboard v1.0
+  </div>
+
+</div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxbLzrA7-Kg7sxBS6i7CQVVx_SxjfjrnyK4CBAdl_shr5pjkbheczPqCyJBZN_VzpGQ/exec';
+const SHEET_ID = '1ILwABW4ZgJQ7ftyk8mqBV9E4k5YSLyvfZ22IpoKBI1A';
+
+let revenueChart, tierChart;
+
+// ── Date ─────────────────────────────────────────────────────
+const now = new Date();
+const dateStr = now.toLocaleDateString('th-TH',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+document.getElementById('dateLabel').textContent = dateStr;
+
+// ── Load All ─────────────────────────────────────────────────
+async function loadAll() {
+  try {
+    const d = await fetch(GAS_URL + '?action=dashboard_admin').then(r=>r.json());
+    renderKPI(d);
+  } catch(e) {
+    renderKPIDemo();
+  }
+  renderRevenueChart();
+  renderTierChart();
+  renderFunnel();
+  renderStampStats();
+  renderTxTable();
+  setTimeout(()=>{
+    document.getElementById('loadingScreen').classList.add('out');
+    setTimeout(()=>document.getElementById('loadingScreen').style.display='none',500);
+  },800);
+}
+
+// ── KPI ──────────────────────────────────────────────────────
+function renderKPI(d) {
+  const rev   = d.revenue   || 0;
+  const txn   = d.txCount   || 0;
+  const avg   = d.avgTicket || 0;
+  const anom  = d.anomaly   || 0;
+  const total = d.totalMembers || 0;
+  const gold  = d.goldCount    || 0;
+  const bronze= d.bronzeCount  || (total - gold);
+  const pct   = total > 0 ? Math.round(gold/total*100) : 0;
+
+  document.getElementById('kRevenue').innerHTML = '<span>฿</span>' + rev.toLocaleString();
+  document.getElementById('kRevSub').innerHTML  = '<span class="neutral">🧺 ' + txn + ' ครั้ง วันนี้</span>';
+  document.getElementById('kTxn').textContent   = txn;
+  document.getElementById('kAvgSub').textContent = 'Avg ฿' + avg.toLocaleString();
+  document.getElementById('kMembers').textContent = total.toLocaleString();
+  document.getElementById('kGoldSub').textContent = '🥇 Gold VIP ' + gold + ' คน';
+  document.getElementById('kAnomaly').textContent  = anom;
+  const anomSub = document.getElementById('kAnomalySub');
+  anomSub.textContent = anom > 0 ? '⚠️ ต้องตรวจสอบ' : '✅ ปกติ';
+  anomSub.className   = 'kpi-sub ' + (anom > 0 ? 'down' : 'up');
+
+  // VIP Ring & counts
+  document.getElementById('goldCount').textContent   = gold;
+  document.getElementById('bronzeCount').textContent = bronze;
+  document.getElementById('vipPct').textContent      = pct + '%';
+  const circ = 339.3;
+  setTimeout(()=>{
+    document.getElementById('vipRing').style.strokeDashoffset = circ - (circ * pct / 100);
+  }, 500);
+
+  // Update tier chart with real data
+  if (tierChart) {
+    tierChart.data.datasets[0].data = [gold, bronze];
+    tierChart.update();
+  }
+}
+
+function renderKPIDemo() {
+  renderKPI({revenue:0,txCount:0,avgTicket:0,anomaly:0,
+    totalMembers:0,goldCount:0,bronzeCount:0});
+}
+
+// ── Revenue Chart ─────────────────────────────────────────────
+function renderRevenueChart() {
+  const days = 14;
+  const labels = [], data = [];
+  for(let i=days-1;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    labels.push(d.toLocaleDateString('th-TH',{day:'numeric',month:'short'}));
+    data.push(Math.floor(Math.random()*4000+1500));
+  }
+  const ctx = document.getElementById('revenueChart');
+  if(revenueChart) revenueChart.destroy();
+  revenueChart = new Chart(ctx,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'รายได้ (฿)',
+        data,
+        fill:true,
+        borderColor:'#00C9B1',
+        backgroundColor:'rgba(0,201,177,0.08)',
+        pointBackgroundColor:'#00C9B1',
+        pointRadius:4,
+        pointHoverRadius:6,
+        tension:0.4,
+        borderWidth:2,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor:'rgba(13,24,41,0.95)',
+        titleColor:'#E8F0FE',bodyColor:'#5C7A9E',
+        borderColor:'rgba(46,141,232,0.3)',borderWidth:1,
+        callbacks:{label:c=>'฿'+c.parsed.y.toLocaleString()}
+      }},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5C7A9E',font:{size:10}}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5C7A9E',font:{size:10},callback:v=>'฿'+v.toLocaleString()}},
+      }
+    }
+  });
+}
+
+// ── Tier Chart ────────────────────────────────────────────────
+function renderTierChart() {
+  const ctx = document.getElementById('tierChart');
+  if(tierChart) tierChart.destroy();
+  // Demo data
+  const gold = 3, bronze = 20;
+  const total = gold + bronze;
+  const pct = total>0 ? Math.round(gold/total*100) : 0;
+  document.getElementById('vipPct').textContent = pct + '%';
+  document.getElementById('goldCount').textContent = gold;
+  document.getElementById('bronzeCount').textContent = bronze;
+  document.getElementById('kGoldSub').textContent = '🥇 Gold VIP ' + gold + ' คน';
+  // Animate ring
+  const circ = 339.3;
+  setTimeout(()=>{
+    document.getElementById('vipRing').style.strokeDashoffset = circ - (circ * pct / 100);
+  },500);
+  tierChart = new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels:['🥇 Gold VIP','🥉 Bronze VIP'],
+      datasets:[{
+        data:[gold, bronze],
+        backgroundColor:['rgba(255,179,0,0.85)','rgba(46,141,232,0.85)'],
+        borderColor:['rgba(255,179,0,0.2)','rgba(46,141,232,0.2)'],
+        borderWidth:2,hoverOffset:6,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#5C7A9E',font:{size:11},padding:16,usePointStyle:true}},
+        tooltip:{backgroundColor:'rgba(13,24,41,0.95)',titleColor:'#E8F0FE',bodyColor:'#5C7A9E',borderColor:'rgba(46,141,232,0.3)',borderWidth:1}
+      },
+      cutout:'68%',
+    }
+  });
+}
+
+// ── Funnel ────────────────────────────────────────────────────
+function renderFunnel() {
+  const stages = [
+    {label:'เพิ่มเพื่อน LINE OA',count:100,color:'var(--muted)'},
+    {label:'สมัครสมาชิก',count:75,color:'var(--sky)'},
+    {label:'ส่งสลิปครั้งแรก',count:55,color:'var(--teal)'},
+    {label:'ซื้อซ้ำ (2+ ครั้ง)',count:38,color:'var(--gold)'},
+    {label:'ครบ 10 ดวง',count:18,color:'var(--orange)'},
+    {label:'แลกคูปอง',count:12,color:'var(--green)'},
+  ];
+  const max = stages[0].count;
+  document.getElementById('funnelWrap').innerHTML = stages.map(s=>`
+    <div class="funnel-item">
+      <div class="funnel-label">
+        <span>${s.label}</span>
+        <span>${s.count}%</span>
+      </div>
+      <div class="funnel-bar">
+        <div class="funnel-fill" style="width:0%;background:${s.color}" data-width="${s.count/max*100}"></div>
+      </div>
+    </div>
+  `).join('');
+  setTimeout(()=>{
+    document.querySelectorAll('.funnel-fill').forEach(el=>{
+      el.style.width = el.dataset.width + '%';
+    });
+  },300);
+}
+
+// ── Stamp Stats ───────────────────────────────────────────────
+function renderStampStats() {
+  document.getElementById('stampStats').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(0,201,177,0.06);border:1px solid rgba(0,201,177,0.15);border-radius:10px">
+        <div style="font-size:12px;color:var(--muted)">🥉 Bronze Avg แต้ม</div>
+        <div style="font-family:'Bebas Neue';font-size:24px;color:var(--teal)">4.2</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(255,179,0,0.06);border:1px solid rgba(255,179,0,0.15);border-radius:10px">
+        <div style="font-size:12px;color:var(--muted)">🥇 Gold Avg แต้ม</div>
+        <div style="font-family:'Bebas Neue';font-size:24px;color:var(--gold)">7.8</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.15);border-radius:10px">
+        <div style="font-size:12px;color:var(--muted)">คูปองออกทั้งหมด</div>
+        <div style="font-family:'Bebas Neue';font-size:24px;color:var(--green)">12</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.15);border-radius:10px">
+        <div style="font-size:12px;color:var(--muted)">Redemption Rate</div>
+        <div style="font-family:'Bebas Neue';font-size:24px;color:var(--purple)">67%</div>
+      </div>
+    </div>
+  `;
+}
+
+// ── TX Table ──────────────────────────────────────────────────
+function renderTxTable() {
+  const rows = [
+    {time:'10:32',name:'ทดสอบ ระบบ',amount:100,bank:'กสิกรไทย',status:'APPROVED',stamp:2,vip:true},
+    {time:'09:15',name:'สมชาย ใจดี',amount:60,bank:'ไทยพาณิชย์',status:'APPROVED',stamp:1,vip:false},
+    {time:'08:47',name:'มาลี สุข',amount:150,bank:'กรุงเทพ',status:'PENDING_REVIEW',stamp:1,vip:false},
+    {time:'08:12',name:'วาสนา มี',amount:80,bank:'กรุงไทย',status:'APPROVED',stamp:1,vip:false},
+    {time:'07:33',name:'ประทีป ดี',amount:200,bank:'กสิกรไทย',status:'REJECTED',stamp:0,vip:false},
+  ];
+  document.getElementById('txTable').innerHTML = rows.map(r=>`
+    <tr>
+      <td style="color:var(--muted)">${r.time}</td>
+      <td>${r.vip?'🥇 ':''}<strong>${r.name}</strong></td>
+      <td style="font-family:'Bebas Neue';font-size:16px;color:var(--teal)">฿${r.amount}</td>
+      <td style="color:var(--muted);font-size:12px">${r.bank}</td>
+      <td>
+        <span class="badge ${r.status==='APPROVED'?'badge-green':r.status==='REJECTED'?'badge-red':'badge-gold'}">
+          ${r.status==='APPROVED'?'✅ ผ่าน':r.status==='REJECTED'?'❌ ไม่ผ่าน':'🟡 รอตรวจ'}
+        </span>
+      </td>
+      <td style="color:var(--gold)">${'⭐'.repeat(Math.min(r.stamp,3))}${r.stamp>0?'':'—'}</td>
+    </tr>
+  `).join('');
+}
+
+// ── Init ──────────────────────────────────────────────────────
+loadAll();
+// Auto refresh ทุก 5 นาที
+setInterval(loadAll, 300000);
+</script>
+</body>
+</html>
